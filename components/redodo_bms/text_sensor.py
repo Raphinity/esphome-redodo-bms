@@ -20,4 +20,3 @@ async def to_code(config):
     if CONF_PROBLEM_DESCRIPTION in config:
         ts = await text_sensor.new_text_sensor(config[CONF_PROBLEM_DESCRIPTION])
         cg.add(hub.set_problem_description_text_sensor(ts))
-
