@@ -24,4 +24,3 @@ async def to_code(config):
     if CONF_PROBLEM in config:
         bs = await binary_sensor.new_binary_sensor(config[CONF_PROBLEM])
         cg.add(hub.set_problem_binary_sensor(bs))
-
