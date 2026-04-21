@@ -12,16 +12,21 @@ static const auto SERVICE_UUID = esphome::esp32_ble::ESPBTUUID::from_raw("0000ff
 static const auto NOTIFY_CHAR_UUID = esphome::esp32_ble::ESPBTUUID::from_raw("0000ffe1-0000-1000-8000-00805f9b34fb");
 static const auto WRITE_CHAR_UUID = esphome::esp32_ble::ESPBTUUID::from_raw("0000ffe2-0000-1000-8000-00805f9b34fb");
 
-static uint8_t cmd_query_battery_status[] = {0x00, 0x00, 0x04, 0x01, 0x13, 0x55, 0xAA, 0x17};
+static const uint8_t cmd_query_battery_status[] = {0x00, 0x00, 0x04, 0x01, 0x13, 0x55, 0xAA, 0x17};
 
 struct RedodoBMSData {
   float battery_voltage = NAN;
   float battery_current = NAN;
   float battery_remaining_ah = NAN;
+  float design_capacity = NAN;
+  float cell_voltages[8] = {NAN};
   float cell_delta_voltage = NAN;
   float battery_soc = NAN;
   float mosfet_temp = NAN;
   float cell_temp = NAN;
+  float battery_health = NAN; 
+  uint32_t cycles = 0;
+  uint32_t balancer_state = 0;
   bool problem = false;
   std::string problem_description;
   
@@ -39,27 +44,38 @@ class RedodoBMS : public PollingComponent, public ble_client::BLEClientNode  {
   void set_battery_current_sensor(sensor::Sensor *sensor) { this->battery_current_sensor = sensor; }
   void set_battery_soc_sensor(sensor::Sensor *sensor) { this->battery_soc_sensor = sensor; }
   void set_battery_remaining_ah_sensor(sensor::Sensor *sensor) { this->battery_remaining_ah_sensor = sensor; }
+  void set_design_capacity_sensor(sensor::Sensor *sensor) { this->design_capacity_sensor = sensor; }
+  void set_cell_voltage_sensor(int index, sensor::Sensor *s) { 
+      if (index >= 0 && index < 8) this->cell_voltages_sensors[index] = s; 
+    }
   void set_cell_delta_voltage_sensor(sensor::Sensor *sensor) { this->cell_delta_voltage_sensor = sensor; }
   void set_cell_temp_sensor(sensor::Sensor *sensor) { this->cell_temp_sensor = sensor; }
   void set_mosfet_temp_sensor(sensor::Sensor *sensor) { this->mosfet_temp_sensor = sensor; }
-  
-  void set_problem_binary_sensor(binary_sensor::BinarySensor *binary_sensor) { this->problem_binary_sensor = binary_sensor; }
 
+  void set_battery_health_sensor(sensor::Sensor *sensor) { this->battery_health_sensor = sensor; }
+  void set_cycles_sensor(sensor::Sensor *sensor) { this->cycles_sensor = sensor; }
+  void set_balancer_sensor(sensor::Sensor *sensor) { this->balancer_sensor = sensor; }
+  void set_problem_binary_sensor(binary_sensor::BinarySensor *binary_sensor) { this->problem_binary_sensor = binary_sensor; }
   void set_problem_description_text_sensor(text_sensor::TextSensor *text_sensor) { this->problem_description_text_sensor = text_sensor; }
  
  protected:
+  void send_query_command_();
+  
   RedodoBMSData bms_data;
   
   sensor::Sensor *battery_voltage_sensor{nullptr};
   sensor::Sensor *battery_current_sensor{nullptr};
   sensor::Sensor *battery_soc_sensor{nullptr};
   sensor::Sensor *battery_remaining_ah_sensor{nullptr};
+  sensor::Sensor *design_capacity_sensor{nullptr};
+  sensor::Sensor *cell_voltages_sensors[8]{nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr};
   sensor::Sensor *cell_delta_voltage_sensor{nullptr};
   sensor::Sensor *cell_temp_sensor{nullptr};
   sensor::Sensor *mosfet_temp_sensor{nullptr};
-
+  sensor::Sensor *battery_health_sensor{nullptr};
+  sensor::Sensor *cycles_sensor{nullptr};
+  sensor::Sensor *balancer_sensor{nullptr};
   binary_sensor::BinarySensor *problem_binary_sensor{nullptr};
-
   text_sensor::TextSensor *problem_description_text_sensor{nullptr};
 
 };
@@ -67,4 +83,3 @@ class RedodoBMS : public PollingComponent, public ble_client::BLEClientNode  {
 
 }  // namespace redodo_bms
 }  // namespace esphome
-
