@@ -8,7 +8,7 @@ CONF_BLE_CLIENT_ID = "ble_client_id"
 redodo_bms_ns = cg.esphome_ns.namespace("redodo_bms")
 RedodoBMS = redodo_bms_ns.class_(
     "RedodoBMS",
-    cg.Component,
+    cg.PollingComponent,
     ble_client.BLEClientNode
 )
 
@@ -21,4 +21,3 @@ async def to_code(config):
     var = cg.new_Pvariable(config[CONF_ID])
     await cg.register_component(var, config)
     await ble_client.register_ble_node(var, config)
-
